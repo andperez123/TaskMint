@@ -1,0 +1,23 @@
+# dependencies
+node_modules/
+
+# build
+.next/
+out/
+dist/
+
+# env
+.env
+.env.local
+.env.*.local
+
+# foundry
+packages/contracts/out/
+packages/contracts/cache/
+packages/contracts/broadcast/
+
+# misc
+.DS_Store
+*.log
+.vercel
+coverage/
