@@ -22,11 +22,12 @@ export const minikitConfig = {
     webhookUrl: `${ROOT_URL}/api/webhook`,
     primaryCategory: "developer-tools",
     tags: ["bounties", "onchain", "base", "agents", "farcaster"],
-    heroImageUrl: `${ROOT_URL}/splash.png`,
+    previewImageUrl: `${ROOT_URL}/preview.png`,
+    heroImageUrl: `${ROOT_URL}/preview.png`,
     tagline: "Onchain bounties, verified and paid",
     ogTitle: "Taskmint",
     ogDescription:
       "Post funded bounties on Base. Complete tasks. Get verified onchain. Get paid.",
-    ogImageUrl: `${ROOT_URL}/splash.png`,
+    ogImageUrl: `${ROOT_URL}/preview.png`,
   },
 } as const;

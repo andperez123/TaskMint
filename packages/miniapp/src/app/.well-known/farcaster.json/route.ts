@@ -9,7 +9,7 @@ export async function GET() {
       name: minikitConfig.miniapp.name,
       subtitle: minikitConfig.miniapp.subtitle,
       iconUrl: minikitConfig.miniapp.iconUrl,
-      imageUrl: minikitConfig.miniapp.iconUrl,
+      imageUrl: minikitConfig.miniapp.previewImageUrl,
       splashImageUrl: minikitConfig.miniapp.splashImageUrl,
       splashBackgroundColor: minikitConfig.miniapp.splashBackgroundColor,
       homeUrl: minikitConfig.miniapp.homeUrl,
