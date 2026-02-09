@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Taskmint — Onchain Bounties",
   description:
     "Post funded bounties on Base. Complete tasks. Get verified onchain. Get paid.",
+  other: {
+    "base:app_id": "6989380773cda529e5cd6808",
+  },
 };
 
 export default function RootLayout({
