@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import express from "express";
 import cors from "cors";
 import { handleSocialAttest } from "./social-verifier.js";
@@ -9,7 +11,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// -- Social verifier (Phase 2) --
+// -- Social verifier --
 app.post("/proof/social/attest", handleSocialAttest);
 
 // -- Test verifier (Phase 3) --
@@ -22,4 +24,7 @@ app.get("/health", (_req, res) => {
 
 app.listen(PORT, () => {
   console.log(`[verifiers] listening on http://localhost:${PORT}`);
+  console.log(`  schema: ${process.env.SOCIAL_SCHEMA_UID ?? "NOT SET"}`);
+  console.log(`  neynar: ${process.env.NEYNAR_API_KEY ? "configured" : "MOCK MODE (no key)"}`);
+  console.log(`  eas: ${process.env.EAS_CONTRACT ?? "default"}`);
 });

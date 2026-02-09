@@ -13,6 +13,12 @@ export const ROUTER_ADDRESS: Address =
 
 export const CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? "84532");
 
+export const SOCIAL_SCHEMA_UID =
+  "0x594b9be4c91edd864c69e502e209d09bfebbfd9ef022d4c2fd9e05fc60c752a7";
+
+export const VERIFIER_URL =
+  process.env.NEXT_PUBLIC_VERIFIER_URL ?? "http://localhost:4001";
+
 // -- ABIs (minimal, enough for the frontend) --
 
 export const FACTORY_ABI = [

@@ -38,7 +38,7 @@ contract TaskmintFactoryTest is Test {
             specURI: "ipfs://QmTest",
             rewardToken: address(0), // ETH
             rewardAmount: 1 ether,
-            payoutPerWinner: 0.5 ether,
+            payoutPerWinner: 0.4 ether,  // must fit within escrowed (0.975 ETH after 2.5% fee)
             maxWinners: 2,
             deadline: uint64(block.timestamp + 7 days),
             proofType: TaskmintTypes.ProofType.TX_EVENT,

@@ -6,13 +6,20 @@ import { useEffect, useState } from "react";
 import { type Address } from "viem";
 import { FACTORY_ABI, FACTORY_ADDRESS, BOUNTY_ABI } from "@/config/contracts";
 import { BountyCard } from "@/components/BountyCard";
-import { type BountyMeta, type ProofType } from "@/lib/types";
+import { type BountyMeta, ProofType } from "@/lib/types";
 
-const CATEGORIES = ["All", "Onchain", "Social", "Testing"] as const;
+const CATEGORIES = [
+  { key: "all", label: "All" },
+  { key: "social", label: "Social" },
+  { key: "onchain", label: "Onchain" },
+  { key: "active", label: "Active" },
+] as const;
+
+type CategoryKey = (typeof CATEGORIES)[number]["key"];
 
 export default function Home() {
   const publicClient = usePublicClient();
-  const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [activeCategory, setActiveCategory] = useState<CategoryKey>("all");
 
   const { data: bountyCount } = useReadContract({
     address: FACTORY_ADDRESS,
@@ -90,71 +97,101 @@ export default function Home() {
     load();
   }, [publicClient, bountyCount]);
 
+  // Filter bounties by category
+  const filtered = bounties.filter((b) => {
+    if (activeCategory === "all") return true;
+    if (activeCategory === "social") return b.proofType === ProofType.EAS_ATTESTATION;
+    if (activeCategory === "onchain") return b.proofType === ProofType.TX_EVENT;
+    if (activeCategory === "active") return b.status === "active";
+    return true;
+  });
+
   return (
-    <main className="min-h-screen px-4 py-8 max-w-lg mx-auto pb-24">
-      {/* Header */}
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Taskmint</h1>
-        <p className="text-sm text-gray-400 mt-1">
+    <main className="min-h-screen px-4 py-6 max-w-lg mx-auto pb-24">
+      {/* Hero */}
+      <div className="mb-6">
+        <p className="text-sm text-gray-400">
           Onchain bounties, verified and paid
         </p>
-      </header>
+      </div>
 
       {/* Post bounty CTA */}
       <Link
         href="/create"
-        className="block w-full text-center bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3 rounded-xl mb-8 transition-colors"
+        className="flex items-center justify-center gap-2 w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3.5 rounded-xl mb-8 transition-colors"
       >
-        + Post a Bounty
+        <span className="text-lg">+</span> Post a Bounty
       </Link>
 
       {/* Category tabs */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar">
         {CATEGORIES.map((cat) => (
           <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-1.5 text-sm rounded-full transition-colors ${
-              activeCategory === cat
+            key={cat.key}
+            onClick={() => setActiveCategory(cat.key)}
+            className={`px-4 py-1.5 text-sm rounded-full transition-colors whitespace-nowrap ${
+              activeCategory === cat.key
                 ? "bg-brand-600 text-white"
-                : "bg-white/10 hover:bg-white/20 text-gray-300"
+                : "bg-white/10 hover:bg-white/15 text-gray-400"
             }`}
           >
-            {cat}
+            {cat.label}
+            {cat.key !== "all" && !loading && (
+              <span className="ml-1.5 text-xs opacity-60">
+                {bounties.filter((b) => {
+                  if (cat.key === "social") return b.proofType === ProofType.EAS_ATTESTATION;
+                  if (cat.key === "onchain") return b.proofType === ProofType.TX_EVENT;
+                  if (cat.key === "active") return b.status === "active";
+                  return true;
+                }).length}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
       {/* Bounty list */}
       <section className="space-y-3">
-        {loading && <p className="text-gray-500 text-sm text-center py-8">Loading bounties...</p>}
-
-        {!loading && bounties.length === 0 && (
-          <div className="rounded-xl border border-white/10 p-4">
-            <p className="text-gray-500 text-sm text-center py-8">
-              No bounties yet. Be the first to post one!
-            </p>
+        {loading && (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border border-white/10 p-4 animate-pulse">
+                <div className="flex justify-between">
+                  <div className="space-y-2">
+                    <div className="h-3 w-20 bg-white/10 rounded" />
+                    <div className="h-4 w-32 bg-white/10 rounded" />
+                  </div>
+                  <div className="h-5 w-16 bg-white/10 rounded" />
+                </div>
+                <div className="h-3 w-24 bg-white/10 rounded mt-3" />
+              </div>
+            ))}
           </div>
         )}
 
-        {!loading &&
-          bounties.map((b) => <BountyCard key={b.id} bounty={b} />)}
-      </section>
+        {!loading && filtered.length === 0 && (
+          <div className="rounded-xl border border-dashed border-white/10 p-8 text-center">
+            {bounties.length === 0 ? (
+              <>
+                <p className="text-gray-400 mb-2">No bounties yet</p>
+                <p className="text-gray-500 text-sm">Be the first to post one!</p>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-400 mb-2">No {activeCategory} bounties</p>
+                <button
+                  onClick={() => setActiveCategory("all")}
+                  className="text-brand-400 text-sm hover:underline"
+                >
+                  Show all bounties
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
-      {/* Bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur border-t border-white/10 px-4 py-3">
-        <div className="max-w-lg mx-auto flex justify-around text-xs text-gray-400">
-          <Link href="/" className="text-white font-medium">
-            Home
-          </Link>
-          <Link href="/my-bounties" className="hover:text-white transition">
-            My Bounties
-          </Link>
-          <Link href="/my-claims" className="hover:text-white transition">
-            My Claims
-          </Link>
-        </div>
-      </nav>
+        {!loading && filtered.map((b) => <BountyCard key={b.id} bounty={b} />)}
+      </section>
     </main>
   );
 }

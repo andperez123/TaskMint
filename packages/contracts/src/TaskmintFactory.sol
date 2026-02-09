@@ -55,9 +55,6 @@ contract TaskmintFactory {
         if (params.maxWinners == 0) revert InvalidParams();
         if (params.payoutPerWinner == 0) revert InvalidParams();
         if (params.deadline <= block.timestamp) revert InvalidParams();
-        if (params.rewardAmount < uint256(params.maxWinners) * params.payoutPerWinner) {
-            revert InvalidParams();
-        }
 
         // Clone
         bountyAddr = _clone(implementation);
@@ -65,6 +62,11 @@ contract TaskmintFactory {
         // Fee
         uint256 fee = (params.rewardAmount * feeBps) / 10_000;
         uint256 escrowed = params.rewardAmount - fee;
+
+        // Validate payout fits within escrowed amount (after fee)
+        if (escrowed < uint256(params.maxWinners) * params.payoutPerWinner) {
+            revert InvalidParams();
+        }
 
         // Transfer funds
         if (params.rewardToken == address(0)) {

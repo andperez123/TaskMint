@@ -7,9 +7,9 @@ export enum ProofType {
 }
 
 export const PROOF_TYPE_LABELS: Record<ProofType, string> = {
-  [ProofType.TX_EVENT]: "Onchain (Router)",
+  [ProofType.TX_EVENT]: "Onchain Task",
   [ProofType.STATE_PREDICATE]: "State Check",
-  [ProofType.EAS_ATTESTATION]: "Attestation",
+  [ProofType.EAS_ATTESTATION]: "Social Engagement",
 };
 
 export const CATEGORY_LABELS = ["Onchain", "Social", "Testing"] as const;

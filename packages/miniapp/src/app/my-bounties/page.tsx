@@ -1,20 +1,21 @@
 "use client";
 
-import { useAccount, useReadContract } from "wagmi";
+import { useAccount, useReadContract, usePublicClient } from "wagmi";
 import { FACTORY_ABI, FACTORY_ADDRESS, BOUNTY_ABI } from "@/config/contracts";
 import { formatReward, shortenAddress, timeLeft } from "@/lib/format";
 import Link from "next/link";
 import { type Address } from "viem";
 import { useEffect, useState } from "react";
-import { usePublicClient } from "wagmi";
 
 interface MyBounty {
   id: number;
   address: Address;
   remaining: bigint;
+  payout: bigint;
   maxWinners: number;
   winnersCount: number;
   deadline: number;
+  proofType: number;
 }
 
 export default function MyBountiesPage() {
@@ -58,27 +59,31 @@ export default function MyBountiesPage() {
 
           if (creator.toLowerCase() !== address!.toLowerCase()) continue;
 
-          const [remaining, maxW, winC, dl] = await Promise.all([
+          const [remaining, payout, maxW, winC, dl, pt] = await Promise.all([
             publicClient!.readContract({ address: bountyAddr, abi: BOUNTY_ABI, functionName: "remainingReward" }),
+            publicClient!.readContract({ address: bountyAddr, abi: BOUNTY_ABI, functionName: "payoutPerWinner" }),
             publicClient!.readContract({ address: bountyAddr, abi: BOUNTY_ABI, functionName: "maxWinners" }),
             publicClient!.readContract({ address: bountyAddr, abi: BOUNTY_ABI, functionName: "winnersCount" }),
             publicClient!.readContract({ address: bountyAddr, abi: BOUNTY_ABI, functionName: "deadline" }),
+            publicClient!.readContract({ address: bountyAddr, abi: BOUNTY_ABI, functionName: "proofType" }),
           ]);
 
           results.push({
             id: i,
             address: bountyAddr,
             remaining: remaining as bigint,
+            payout: payout as bigint,
             maxWinners: Number(maxW),
             winnersCount: Number(winC),
             deadline: Number(dl),
+            proofType: Number(pt),
           });
         } catch {
-          // skip broken entries
+          // skip
         }
       }
 
-      setMyBounties(results);
+      setMyBounties(results.reverse());
       setLoading(false);
     }
 
@@ -86,21 +91,34 @@ export default function MyBountiesPage() {
   }, [publicClient, address, bountyCount]);
 
   return (
-    <main className="min-h-screen px-4 py-8 max-w-lg mx-auto pb-24">
+    <main className="min-h-screen px-4 py-6 max-w-lg mx-auto pb-24">
       <h1 className="text-2xl font-bold mb-6">My Bounties</h1>
 
       {!isConnected && (
-        <p className="text-gray-500">Connect your wallet to see your bounties.</p>
+        <div className="text-center py-16">
+          <p className="text-gray-400 mb-2">Connect your wallet to see your bounties.</p>
+          <p className="text-sm text-gray-500">Use the button in the top right.</p>
+        </div>
       )}
 
       {isConnected && loading && (
-        <p className="text-gray-500">Loading...</p>
+        <div className="space-y-3">
+          {[1, 2].map((i) => (
+            <div key={i} className="rounded-xl border border-white/10 p-4 animate-pulse">
+              <div className="h-4 w-32 bg-white/10 rounded mb-2" />
+              <div className="h-3 w-24 bg-white/10 rounded" />
+            </div>
+          ))}
+        </div>
       )}
 
       {isConnected && !loading && myBounties.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">You haven't created any bounties yet.</p>
-          <Link href="/create" className="text-brand-400 underline text-sm">
+        <div className="text-center py-16">
+          <p className="text-gray-400 mb-3">You haven&apos;t created any bounties yet.</p>
+          <Link
+            href="/create"
+            className="inline-block bg-brand-600 hover:bg-brand-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm"
+          >
             Create your first bounty
           </Link>
         </div>
@@ -109,6 +127,8 @@ export default function MyBountiesPage() {
       <div className="space-y-3">
         {myBounties.map((b) => {
           const expired = b.deadline * 1000 < Date.now();
+          const filled = b.winnersCount >= b.maxWinners;
+          const isSocial = b.proofType === 2;
           return (
             <Link
               key={b.id}
@@ -117,6 +137,16 @@ export default function MyBountiesPage() {
             >
               <div className="flex justify-between items-start">
                 <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    {isSocial ? (
+                      <span className="text-[10px] font-medium bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">Social</span>
+                    ) : (
+                      <span className="text-[10px] font-medium bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full">Onchain</span>
+                    )}
+                    {!expired && !filled && <span className="text-[10px] font-medium bg-green-500/20 text-green-300 px-2 py-0.5 rounded-full">Active</span>}
+                    {expired && <span className="text-[10px] font-medium bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">Expired</span>}
+                    {filled && <span className="text-[10px] font-medium bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded-full">Filled</span>}
+                  </div>
                   <p className="font-semibold">Bounty #{b.id}</p>
                   <p className="text-xs text-gray-500 font-mono">{shortenAddress(b.address)}</p>
                 </div>
@@ -129,22 +159,13 @@ export default function MyBountiesPage() {
                   </p>
                 </div>
               </div>
-              <p className={`text-xs mt-2 ${expired ? "text-red-400" : "text-green-400"}`}>
+              <p className={`text-xs mt-2 ${expired ? "text-gray-500" : "text-gray-400"}`}>
                 {timeLeft(b.deadline)}
               </p>
             </Link>
           );
         })}
       </div>
-
-      {/* Bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur border-t border-white/10 px-4 py-3">
-        <div className="max-w-lg mx-auto flex justify-around text-xs text-gray-400">
-          <Link href="/" className="hover:text-white transition">Home</Link>
-          <Link href="/my-bounties" className="text-white font-medium">My Bounties</Link>
-          <Link href="/my-claims" className="hover:text-white transition">My Claims</Link>
-        </div>
-      </nav>
     </main>
   );
 }

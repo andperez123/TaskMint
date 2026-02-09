@@ -16,6 +16,11 @@ packages/contracts/out/
 packages/contracts/cache/
 packages/contracts/broadcast/
 
+# database
+*.db
+*.db-shm
+*.db-wal
+
 # misc
 .DS_Store
 *.log
