@@ -1,4 +1,4 @@
-const ROOT_URL = process.env.NEXT_PUBLIC_URL ?? "https://taskmint.vercel.app";
+const ROOT_URL = process.env.NEXT_PUBLIC_URL ?? "https://trytaskmint.vercel.app";
 
 export const minikitConfig = {
   // Sign your manifest at https://www.base.dev/preview?tab=account

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Providers } from "@/providers";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
+import { MiniAppReady } from "@/components/MiniAppReady";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Providers>
+          <MiniAppReady />
           <Header />
           {children}
           <BottomNav />
